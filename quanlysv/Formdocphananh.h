@@ -233,12 +233,12 @@ private: System::Void delPA_Click(System::Object^ sender, System::EventArgs^ e) 
 
 	// 2) Tìm phần tử trùng với MSSV & môn & nội dung & thời gian
 	//    (giả sử bạn đã lưu currentMSSV, currentSubject, currentContent, currentTime)
-	for (int i = 0; i < ds.n; i++) {
+	for (int i = 0; i < ds.getSoLuongPA(); i++) {
 		// chuyển native -> managed để so sánh
-		String^ mssv_native = gcnew String(ds.danhsachPA[i].nguoi_goi.mssv);
-		String^ subj_native = gcnew String(ds.danhsachPA[i].tenmonhoc);
-		String^ content_native = gcnew String(ds.danhsachPA[i].noi_dung);
-		String^ time_native = gcnew String(ds.danhsachPA[i].thoi_gian);
+		String^ mssv_native = gcnew String(ds.getPhanAnhList()[i].nguoi_goi.getMssv());
+		String^ subj_native = gcnew String(ds.getPhanAnhList()[i].tenmonhoc);
+		String^ content_native = gcnew String(ds.getPhanAnhList()[i].noi_dung);
+		String^ time_native = gcnew String(ds.getPhanAnhList()[i].thoi_gian);
 
 		if (mssv_native == currentMSSV
 			&& subj_native == currentSubject

@@ -31,10 +31,10 @@ namespace quanlysv {
 
 			// unwrap and pre-fill:
 			giangvien* p = reinterpret_cast<giangvien*>(_nativePtr.ToPointer());
-			code_box->Text = gcnew String(p->magv);
-			name_box->Text = gcnew String(p->hoten);
-			sdt_box->Text = gcnew String(p->sodienthoai);
-			email_box->Text = gcnew String(p->email);
+			code_box->Text = gcnew String(p->getMagv());
+			name_box->Text = gcnew String(p->getHoten());
+			sdt_box->Text = gcnew String(p->getSodienthoai());
+			email_box->Text = gcnew String(p->getEmail());
 		}
 
 
@@ -255,24 +255,74 @@ namespace quanlysv {
 		}
 #pragma endregion
 	private: System::Void save_Click(System::Object^ sender, System::EventArgs^ e) {
+		// Lấy con trỏ native từ IntPtr
 		giangvien* p = reinterpret_cast<giangvien*>(_nativePtr.ToPointer());
-		if (!p) return;
-
-		// update native struct from textboxes
-		pin_ptr<const wchar_t> pn = PtrToStringChars(name_box->Text);
-		wcsncpy(p->hoten, pn, 29); p->hoten[29] = L'\0';
-		pin_ptr<const wchar_t> pp = PtrToStringChars(sdt_box->Text);
-		wcsncpy(p->sodienthoai, pp, 14); p->sodienthoai[14] = L'\0';
-		pin_ptr<const wchar_t> pe = PtrToStringChars(email_box->Text);
-		wcsncpy(p->email, pe, 49); p->email[49] = L'\0';
-
-		// persist back to file
-		Danhsachgiangvien ds; ds.docdanhsachgv();
-		if (_index >= 0 && _index < ds.n) {
-			ds.ds[_index] = *p;
-			ds.luudanhsachgv();
+		if (p == nullptr) {
+			// Không có đối tượng native, không làm gì
+			return;
 		}
 
+		// 1) Cập nhật thông tin từ các TextBox vào đối tượng giangvien *p qua setter
+		// Name
+		String^ s_name = name_box->Text->Trim();
+		if (!String::IsNullOrWhiteSpace(s_name)) {
+			pin_ptr<const wchar_t> wname = PtrToStringChars(s_name);
+			p->setHoten(wname);
+		}
+		else {
+			// Nếu cần, có thể xóa hoặc giữ nguyên: tuỳ nghiệp vụ. Ở đây giữ nguyên nếu rỗng.
+		}
+
+		// Số điện thoại
+		String^ s_phone = sdt_box->Text->Trim();
+		if (!String::IsNullOrWhiteSpace(s_phone)) {
+			pin_ptr<const wchar_t> wphone = PtrToStringChars(s_phone);
+			p->setSodienthoai(wphone);
+		}
+
+		// Email
+		String^ s_email = email_box->Text->Trim();
+		if (!String::IsNullOrWhiteSpace(s_email)) {
+			pin_ptr<const wchar_t> wemail = PtrToStringChars(s_email);
+			p->setEmail(wemail);
+		}
+
+		// Nếu muốn cập nhật mã giảng viên ở đây (nếu mã cho phép chỉnh sửa), có thể làm tương tự:
+		// Nhưng thường mã là khóa chính, không đổi. Nếu cần đổi:
+		// String^ s_code = code_box->Text->Trim();
+		// try {
+		//     std::string codeStd = msclr::interop::marshal_as<std::string>(s_code);
+		//     p->setMagv(codeStd.c_str());
+		// }
+		// catch (Exception^) {
+		//     MessageBox::Show(L"Không thể chuyển mã giảng viên sang định dạng ký tự hợp lệ.", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+		//     return;
+		// }
+
+		// 2) Đọc danh sách giảng viên hiện có và cập nhật
+		Danhsachgiangvien ds;
+		ds.docdanhsachgv();  // đọc từ file
+
+		// Tìm giảng viên hiện tại trong danh sách, dựa vào mã (magv) của *p
+		const char* magv_cur = p->getMagv();
+		giangvien* existing = ds.timKiemGiangVien(magv_cur);
+		if (existing != nullptr) {
+			// Gán lại toàn bộ thông tin
+			*existing = *p;
+			ds.luudanhsachgv();
+		}
+		else {
+			// Nếu không tìm thấy, có thể thông báo hoặc thêm mới, tuỳ nghiệp vụ:
+			MessageBox::Show(
+				L"Không tìm thấy giảng viên với mã hiện tại trong danh sách. Không thể cập nhật.",
+				L"Lỗi",
+				MessageBoxButtons::OK,
+				MessageBoxIcon::Warning
+			);
+			// Hoặc: ds.themGiangVien(*p); ds.luudanhsachgv();
+		}
+
+		// 3) Đóng form hiện tại, trả về DialogResult OK
 		this->DialogResult = System::Windows::Forms::DialogResult::OK;
 		this->Close();
 	}
