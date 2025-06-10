@@ -254,39 +254,39 @@ namespace quanlysv {
 				::monhoc mh;
 				{
 					std::string native = context.marshal_as<std::string>(filePath);
-					strcpy(mh.tenmonhoc, native.c_str());
+					mh.setTenFile(native.c_str());
 				}
 				mh.doc();
 
 				SinhVien* foundSV = mh.timKiemSV(mssv_native.c_str());
 				if (foundSV != nullptr)
 				{
-					bool hasLab1 = (foundSV->lab1 >= 0);
-					bool hasLab2 = (foundSV->lab2 >= 0);
-					bool hasPt1 = (foundSV->pt1 >= 0);
-					bool hasPt2 = (foundSV->pt2 >= 0);
-					bool hasPres = (foundSV->presentation >= 0);
-					bool hasFinal = (foundSV->final >= 0);
+					bool hasLab1 = (foundSV->getLab1() >= 0);
+					bool hasLab2 = (foundSV->getLab2() >= 0);
+					bool hasPt1 = (foundSV->getPt1() >= 0);
+					bool hasPt2 = (foundSV->getPt2() >= 0);
+					bool hasPres = (foundSV->getPresentation() >= 0);
+					bool hasFinal = (foundSV->getFinal() >= 0);
 
 					bool hasAllScores = (hasLab1 && hasLab2 && hasPt1 && hasPt2 && hasPres && hasFinal);
 
-					String^ s_lab1 = hasLab1 ? foundSV->lab1.ToString("F1") : "";
-					String^ s_lab2 = hasLab2 ? foundSV->lab2.ToString("F1") : "";
-					String^ s_pt1 = hasPt1 ? foundSV->pt1.ToString("F1") : "";
-					String^ s_pt2 = hasPt2 ? foundSV->pt2.ToString("F1") : "";
-					String^ s_pre = hasPres ? foundSV->presentation.ToString("F1") : "";
-					String^ s_final = hasFinal ? foundSV->final.ToString("F1") : "";
+					String^ s_lab1 = hasLab1 ? foundSV->getLab1().ToString("F1") : "";
+					String^ s_lab2 = hasLab2 ? foundSV->getLab2().ToString("F1") : "";
+					String^ s_pt1 = hasPt1 ? foundSV->getPt1().ToString("F1") : "";
+					String^ s_pt2 = hasPt2 ? foundSV->getPt2().ToString("F1") : "";
+					String^ s_pre = hasPres ? foundSV->getPresentation().ToString("F1") : "";
+					String^ s_final = hasFinal ? foundSV->getFinal().ToString("F1") : "";
 
 					String^ s_tb = "";
 					String^ s_gpa = "";
 					String^ s_diemchu = "";
 					if (hasAllScores) {
 						foundSV->tinhDiemTrungBinh();
-						double tb = foundSV->trung_binh;
-						double gpa = foundSV->gpa;
+						double tb = foundSV->getTrungBinh();
+						double gpa = foundSV->getGpa();
 						s_tb = tb.ToString("F1");
 						s_gpa = gpa.ToString("F2");
-						s_diemchu = gcnew String(foundSV->diemchu, 1);
+						s_diemchu = gcnew String(foundSV->getDiemChu(), 1);
 
 						sumTB_all += tb;
 						sumGPA_all += gpa;

@@ -246,7 +246,7 @@ private: System::Void save_Click(System::Object^ sender, System::EventArgs^ e) {
 	// Tìm SinhVien trong file môn học để lấy hoTen nếu có
 	std::string filename = tenMon_native + ".dat";
 	monhoc mh;
-	strcpy(mh.tenmonhoc, filename.c_str());
+	mh.setTenFile(filename.c_str());
 	mh.doc();
 	SinhVien tempSV;
 	SinhVien* svptr = mh.timKiemSV(mssv_native.c_str());
@@ -254,15 +254,17 @@ private: System::Void save_Click(System::Object^ sender, System::EventArgs^ e) {
 		tempSV = *svptr;
 	}
 	else {
-		// Nếu không tìm được (SV chưa có trong môn), chỉ gán MSSV, để hoTen rỗng
-		strncpy(tempSV.mssv, mssv_native.c_str(), sizeof(tempSV.mssv) - 1);
-		tempSV.mssv[sizeof(tempSV.mssv) - 1] = '\0';
-		tempSV.hoTen[0] = L'\0';
-		// Các điểm khác bỏ mặc định
-		tempSV.lab1 = tempSV.lab2 = tempSV.pt1 = tempSV.pt2 = tempSV.presentation = tempSV.final = -1.0f;
-		tempSV.trung_binh = 0.0f;
-		tempSV.diemchu = 'F';
-		tempSV.gpa = 0.0f;
+	//	// Nếu không tìm được (SV chưa có trong môn), chỉ gán MSSV, để hoTen rỗng
+	//	strncpy(tempSV.mssv, mssv_native.c_str(), sizeof(tempSV.mssv) - 1);
+	//	tempSV.mssv[sizeof(tempSV.mssv) - 1] = '\0';
+	//	tempSV.hoTen[0] = L'\0';
+	//	// Các điểm khác bỏ mặc định
+	//	tempSV.lab1 = tempSV.lab2 = tempSV.pt1 = tempSV.pt2 = tempSV.presentation = tempSV.final = -1.0f;
+	//	tempSV.trung_binh = 0.0f;
+	//	tempSV.diemchu = 'F';
+	//	tempSV.gpa = 0.0f;
+		tempSV.setMssv(mssv_native.c_str());
+		tempSV.setScores(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
 	}
 
 	// Tạo đối tượng phan_anh

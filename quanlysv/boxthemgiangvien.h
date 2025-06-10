@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "monhoc.h"
 #include "vcclr.h"
+#include <msclr\marshal_cppstd.h>
 
 
 namespace quanlysv {
@@ -12,6 +13,7 @@ namespace quanlysv {
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	using namespace msclr::interop;
 
 	/// <summary>
 	/// Summary for boxthemgiangvien
@@ -263,18 +265,18 @@ namespace quanlysv {
 		// Có thể thêm logic để cập nhật dữ liệu nếu cần thiết
 	}
 		   System::Void save_Click(System::Object^ sender, System::EventArgs^ e) {
-			   // 0) Lấy mã nhập vào và trim
 			   String^ s_code = code_box->Text->Trim();
 			   if (String::IsNullOrWhiteSpace(s_code)) {
 				   MessageBox::Show(L"Vui lòng nhập mã giảng viên.", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Warning);
 				   return;
 			   }
 
-			   // 1) Kiểm tra trùng mã trong danh sách cũ
 			   Danhsachgiangvien dsCheck;
 			   dsCheck.docdanhsachgv();
-			   for (int i = 0; i < dsCheck.n; ++i) {
-				   String^ existing = gcnew String(dsCheck.ds[i].magv);
+			   int existingCount = dsCheck.getn();
+			   const giangvien* arrGV = dsCheck.getGiangVienList();
+			   for (int i = 0; i < existingCount; ++i) {
+				   String^ existing = gcnew String(arrGV[i].getMagv());
 				   if (existing->Equals(s_code, StringComparison::OrdinalIgnoreCase)) {
 					   MessageBox::Show(
 						   L"Mã giảng viên '" + s_code + L"' đã tồn tại. Vui lòng chọn mã khác.",
@@ -286,33 +288,35 @@ namespace quanlysv {
 				   }
 			   }
 
-			   // 2) Tạo đối tượng giangvien C++ thuần
+			   //Tạo đối tượng giangvien
 			   giangvien gv = {};
 			   String^ s_name = name_box->Text->Trim();
 			   String^ s_phone = sdt_box->Text->Trim();
 			   String^ s_email = email_box->Text->Trim();
 
-			   // Chuyển String^ -> wchar_t[] hoặc char[]
-			   {
+			   // Chuyển String^ -> wchar_t* cho các setter tương ứng
+			   if (!String::IsNullOrWhiteSpace(s_name)) {
 				   pin_ptr<const wchar_t> wname = PtrToStringChars(s_name);
-				   wcsncpy(gv.hoten, wname, 29);
-				   gv.hoten[29] = L'\0';
+				   gv.setHoten(wname);
 			   }
-			   {
+			   if (!String::IsNullOrWhiteSpace(s_phone)) {
 				   pin_ptr<const wchar_t> wphone = PtrToStringChars(s_phone);
-				   wcsncpy(gv.sodienthoai, wphone, 14);
-				   gv.sodienthoai[14] = L'\0';
+				   gv.setSodienthoai(wphone);
 			   }
-			   {
+			   if (!String::IsNullOrWhiteSpace(s_email)) {
 				   pin_ptr<const wchar_t> wemail = PtrToStringChars(s_email);
-				   wcsncpy(gv.email, wemail, 49);
-				   gv.email[49] = L'\0';
+				   gv.setEmail(wemail);
 			   }
-			   {
-				   pin_ptr<const wchar_t> wcode = PtrToStringChars(s_code);
-				   char mbuf[10] = { 0 };
-				   wcstombs(mbuf, wcode, 9);
-				   strcpy(gv.magv, mbuf);
+			   // Chuyển String^ -> std::string -> const char* cho magv
+			   try {
+				   std::string codeStd = marshal_as<std::string>(s_code);
+				   // Nếu muốn chắc chắn mã không quá dài, setMagv đã cắt đúng kích thước
+				   gv.setMagv(codeStd.c_str());
+			   }
+			   catch (Exception^) {
+				   // Nếu marshal thất bại (hiếm khi xảy ra với ký tự Unicode không ANSI), có thể báo lỗi cho user
+				   MessageBox::Show(L"Không thể chuyển mã giảng viên sang định dạng ký tự hợp lệ.", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				   return;
 			   }
 
 			   // 3) Đọc danh sách cũ, thêm vào, rồi lưu

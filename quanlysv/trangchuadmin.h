@@ -433,12 +433,12 @@ namespace quanlysv {
 			   dt->Columns->Add(L"Số môn", Int32::typeid);
 
 			   // 4) Fill DataTable
-			   for (int i = 0; i < ds.n; i++) {
-				   giangvien& gv = ds.ds[i];
-				   String^ magv = gcnew String(gv.magv);
-				   String^ hoten = gcnew String(gv.hoten);
-				   String^ sdt = gcnew String(gv.sodienthoai);
-				   String^ mail = gcnew String(gv.email);
+			   for (int i = 0; i < ds.getn(); i++) {
+				   const giangvien& gv = ds.getGiangVienList()[i];
+				   String^ magv = gcnew String(gv.getMagv());
+				   String^ hoten = gcnew String(gv.getHoten());
+				   String^ sdt = gcnew String(gv.getSodienthoai());
+				   String^ mail = gcnew String(gv.getEmail());
 
 				   int somon = subjCount->ContainsKey(magv) ? subjCount[magv] : 0;
 				   dt->Rows->Add(i + 1, magv, hoten, sdt, mail, somon);
@@ -530,20 +530,21 @@ private: System::Void chitiet_Click(System::Object^ sender, System::EventArgs^ e
 		monhoc mh;
 		// Gán tên file lưu trữ
 		std::string fn = marshal_as<std::string>(fileName);
-		strcpy(mh.tenmonhoc, fn.c_str());
+		mh.setTenFile(fn.c_str());
 		mh.doc();
 
-		int total = mh.n;
+		int total = mh.getSoLuongSV();
 		int filled = 0;
 		int passed = 0;
-		for (int i = 0; i < mh.n; i++) {
+		for (int i = 0; i < mh.getSoLuongSV(); i++) {
 			// Kiểm tra đã nhập đủ 6 cột điểm
-			SinhVien& sv = mh.sv[i];
+			const SinhVien& sv = mh.getSinhVienList()[i];
 			// Giả sử điểm chưa nhập để giá trị âm (nếu cần có thể tùy chỉnh)
-			if (sv.lab1 >= 0 && sv.lab2 >= 0 && sv.pt1 >= 0 && sv.pt2 >= 0 && sv.presentation >= 0 && sv.final >= 0) {
+			if (sv.getLab1() >= 0 && sv.getLab2() >= 0 && sv.getPt1() >= 0 && sv.getPt2() >= 0 && sv.getPresentation() >= 0 && sv.getFinal() >= 0) {
 				filled++;
-				sv.tinhDiemTrungBinh();
-				if (sv.trung_binh >= 5.0f) passed++;
+				SinhVien svCopy = sv; // Tạo bản sao để tính điểm trung bình
+				svCopy.tinhDiemTrungBinh();
+				if (svCopy.getTrungBinh() >= 5.0f) passed++;
 			}
 		}
 
@@ -625,16 +626,16 @@ private: System::Void button4_Click(System::Object^ sender, System::EventArgs^ e
 		// tìm họ tên giảng viên
 		std::string stdMagv = msclr::interop::marshal_as<std::string>(maGV);
 		giangvien* pGV = ds.timKiemGiangVien(stdMagv.c_str());
-		String^ tenGV = pGV ? gcnew String(pGV->hoten) : L"(không tìm thấy)";
+		String^ tenGV = pGV ? gcnew String(pGV->getHoten()) : L"(không tìm thấy)";
 
 		// đọc số SV từ file môn học
 		monhoc mh;
 		String^ filename = tenMon + ".dat";
 		std::string fn = msclr::interop::marshal_as<std::string>(filename);
-		strcpy(mh.tenmonhoc, fn.c_str());
+		mh.setTenFile(fn.c_str()); // Gán tên file cho đối tượng môn học
 		mh.doc();
 
-		dt->Rows->Add(idx++, tenMon, tenGV, maGV, mh.n);
+		dt->Rows->Add(idx++, tenMon, tenGV, maGV, mh.getSoLuongSV());
 	}
 
 	dataGridView1->DataSource = dt;
@@ -694,11 +695,11 @@ private: System::Void PA_Click(System::Object^ sender, System::EventArgs^ e) {
 	dt->Columns->Add(L"Nội dung", String::typeid);
 
 	// 1.3) Điền dữ liệu
-	for (int i = 0; i < dsPA.n; i++) {
-		auto& pa = dsPA.danhsachPA[i];
+	for (int i = 0; i < dsPA.getSoLuongPA(); i++) {
+		auto& pa = dsPA.getPhanAnhList()[i];
 
-		String^ mssv = gcnew String(pa.nguoi_goi.mssv);
-		String^ hoten = gcnew String(pa.nguoi_goi.hoTen);
+		String^ mssv = gcnew String(pa.nguoi_goi.getMssv());
+		String^ hoten = gcnew String(pa.nguoi_goi.getHoTen());
 		String^ time = gcnew String(pa.thoi_gian);
 		String^ subj = gcnew String(pa.tenmonhoc);
 		String^ content = gcnew String(pa.noi_dung);
@@ -720,10 +721,10 @@ private: System::Void button6_Click(System::Object^ sender, System::EventArgs^ e
 	DataGridViewRow^ row = dataGridView1->SelectedRows[0];
 	// Lấy từng cột theo index
 	String^ mssv = row->Cells["MSSV"]->Value->ToString();
-	String^ hoten = row->Cells["Họ tên SV"]->Value->ToString();
-	String^ time = row->Cells["Thời gian"]->Value->ToString();
-	String^ subj = row->Cells["Môn phản ánh"]->Value->ToString();
-	String^ content = row->Cells["Nội dung"]->Value->ToString();
+	String^ hoten = row->Cells[L"Họ tên SV"]->Value->ToString();
+	String^ time = row->Cells[L"Thời gian"]->Value->ToString();
+	String^ subj = row->Cells[L"Môn phản ánh"]->Value->ToString();
+	String^ content = row->Cells[L"Nội dung"]->Value->ToString();
 
 	// Mở dialog chi tiết
 	Formdocphananh^ dlg = gcnew Formdocphananh(mssv, subj, content, time);

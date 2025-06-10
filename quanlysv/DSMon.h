@@ -34,14 +34,14 @@ namespace quanlysv {
 		EditForm(SinhVien sv) {
 			InitializeComponent();
 			isSubmitted = false;
-			txtMSSV->Text = gcnew String(sv.mssv);
-			txtHoTen->Text = gcnew String(sv.hoTen);
-			txtLab1->Text = (sv.lab1 == -1.0f) ? "" : sv.lab1.ToString();
-			txtLab2->Text = (sv.lab2 == -1.0f) ? "" : sv.lab2.ToString();
-			txtPt1->Text = (sv.pt1 == -1.0f) ? "" : sv.pt1.ToString();
-			txtPt2->Text = (sv.pt2 == -1.0f) ? "" : sv.pt2.ToString();
-			txtPresentation->Text = (sv.presentation == -1.0f) ? "" : sv.presentation.ToString();
-			txtFinal->Text = (sv.final == -1.0f) ? "" : sv.final.ToString();
+			txtMSSV->Text = gcnew String(sv.getMssv());
+			txtHoTen->Text = gcnew String(sv.getHoTen());
+			txtLab1->Text = (sv.getLab1() == -1.0f) ? "" : sv.getLab1().ToString();
+			txtLab2->Text = (sv.getLab2() == -1.0f) ? "" : sv.getLab2().ToString();
+			txtPt1->Text = (sv.getPt1() == -1.0f) ? "" : sv.getPt1().ToString();
+			txtPt2->Text = (sv.getPt2() == -1.0f) ? "" : sv.getPt2().ToString();
+			txtPresentation->Text = (sv.getPresentation() == -1.0f) ? "" : sv.getPresentation().ToString();
+			txtFinal->Text = (sv.getFinal() == -1.0f) ? "" : sv.getFinal().ToString();
 		}
 
 	private:
@@ -250,7 +250,7 @@ namespace quanlysv {
 			// Chuyển đổi String^ sang std::string để lấy tên file cho đối tượng native
 			std::string nativeFile = msclr::interop::marshal_as<std::string>(subjectFile);
 			nativeMonHoc = new monhoc;
-			strcpy(nativeMonHoc->tenmonhoc, nativeFile.c_str());
+			nativeMonHoc->setTenFile(nativeFile.c_str());
 			// Đọc dữ liệu từ file
 			nativeMonHoc->doc();
 			// Tải dữ liệu hiển thị lên DataGridView
@@ -624,36 +624,36 @@ namespace quanlysv {
 		}
 		void LoadData() {
 			dataMon->Rows->Clear();
-			for (int i = 0; i < nativeMonHoc->n; i++) {
-				SinhVien sv = nativeMonHoc->sv[i];
-				bool allScoresEmpty = (sv.lab1 == -1.0f || sv.lab2 == -1.0f ||
-					sv.pt1 == -1.0f || sv.pt2 == -1.0f ||
-					sv.presentation == -1.0f || sv.final == -1.0f);
+			for (int i = 0; i < nativeMonHoc->getSoLuongSV(); i++) {
+				SinhVien sv = nativeMonHoc->getSinhVienList()[i];
+				bool allScoresEmpty = (sv.getLab1() == -1.0f || sv.getLab2() == -1.0f ||
+					sv.getPt1() == -1.0f || sv.getPt2() == -1.0f ||
+					sv.getPresentation() == -1.0f || sv.getFinal() == -1.0f);
 
 				int rowIndex = dataMon->Rows->Add(
-					gcnew String(sv.mssv),
-					gcnew String(sv.hoTen),
-					(sv.lab1 == -1.0f) ? "" : sv.lab1.ToString(),
-					(sv.lab2 == -1.0f) ? "" : sv.lab2.ToString(),
-					(sv.pt1 == -1.0f) ? "" : sv.pt1.ToString(),
-					(sv.pt2 == -1.0f) ? "" : sv.pt2.ToString(),
-					(sv.presentation == -1.0f) ? "" : sv.presentation.ToString(),
-					(sv.final == -1.0f) ? "" : sv.final.ToString(),
-					allScoresEmpty ? "" : sv.trung_binh.ToString("F1"),
-					allScoresEmpty ? "" : gcnew String(sv.diemchu, 1),
-					allScoresEmpty ? "" : sv.gpa.ToString("F1")
+					gcnew String(sv.getMssv()),
+					gcnew String(sv.getHoTen()),
+					(sv.getLab1() == -1.0f) ? "" : sv.getLab1().ToString(),
+					(sv.getLab2() == -1.0f) ? "" : sv.getLab2().ToString(),
+					(sv.getPt1() == -1.0f) ? "" : sv.getPt1().ToString(),
+					(sv.getPt2() == -1.0f) ? "" : sv.getPt2().ToString(),
+					(sv.getPresentation() == -1.0f) ? "" : sv.getPresentation().ToString(),
+					(sv.getFinal() == -1.0f) ? "" : sv.getFinal().ToString(),
+					allScoresEmpty ? "" : sv.getTrungBinh().ToString("F1"),
+					allScoresEmpty ? "" : gcnew String(sv.getDiemChu(), 1),
+					allScoresEmpty ? "" : sv.getGpa().ToString("F1")
 				);
-				bool hasAllScores = (sv.lab1 >= 0 && sv.lab2 >= 0 &&
-					sv.pt1 >= 0 && sv.pt2 >= 0 &&
-					sv.presentation >= 0 && sv.final >= 0);
+				bool hasAllScores = (sv.getLab1() >= 0 && sv.getLab2() >= 0 &&
+					sv.getPt1() >= 0 && sv.getPt2() >= 0 &&
+					sv.getPresentation() >= 0 && sv.getFinal() >= 0);
 
 				DataGridViewRow^ row = dataMon->Rows[rowIndex];
 				// Đặt màu nền cho hàng dựa trên điểm trung bình
 				if (hasAllScores) {
-					if (sv.trung_binh < 4.0f) {
+					if (sv.getTrungBinh() < 4.0f) {
 						row->DefaultCellStyle->BackColor = System::Drawing::Color::LightCoral; // Màu đỏ nhạt cho điểm dưới 5
 					}
-					else if (sv.trung_binh > 8.0f) {
+					else if (sv.getTrungBinh() > 8.0f) {
 						row->DefaultCellStyle->BackColor = System::Drawing::Color::LightGreen; // Màu xanh nhạt cho điểm từ 8 trở lên
 					}
 				}
@@ -673,7 +673,7 @@ namespace quanlysv {
 			return;
 		}
 		studentIndex = dataMon->SelectedRows[0]->Index;
-		SinhVien currentSV = nativeMonHoc->sv[studentIndex];
+		SinhVien currentSV = nativeMonHoc->getSinhVienList()[studentIndex];
 		EditForm^ editForm = gcnew EditForm(currentSV);
 		editForm->Text = L"Chỉnh sửa thông tin sinh viên";
 		editForm->ShowDialog();
@@ -683,7 +683,7 @@ namespace quanlysv {
 			msclr::interop::marshal_context context;
 			std::string newMssv = context.marshal_as<std::string>(editForm->MSSV);
 			// Check if MSSV has changed and if new MSSV already exists
-			if (strcmp(currentSV.mssv, newMssv.c_str()) != 0) {
+			if (strcmp(currentSV.getMssv(), newMssv.c_str()) != 0) {
 				int existingIndex = nativeMonHoc->timSV(newMssv.c_str());
 				if (existingIndex != -1) {
 					MessageBox::Show(L"Mã số sinh viên đã tồn tại trong danh sách!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -691,16 +691,16 @@ namespace quanlysv {
 				}
 			}
 			std::wstring newHoTen = context.marshal_as<std::wstring>(editForm->HoTen);
-			strcpy(newSV.mssv, newMssv.c_str());
-			wcscpy(newSV.hoTen, newHoTen.c_str());
-			newSV.lab1 = editForm->Lab1;
-			newSV.lab2 = editForm->Lab2;
-			newSV.pt1 = editForm->Pt1;
-			newSV.pt2 = editForm->Pt2;
-			newSV.presentation = editForm->Presentation;
-			newSV.final = editForm->Final;
+			newSV.setMssv(newMssv.c_str());
+			newSV.setHoTen(newHoTen.c_str());
+			newSV.setLab1(editForm->Lab1);
+			newSV.setLab2(editForm->Lab2);
+			newSV.setPt1(editForm->Pt1);
+			newSV.setPt2(editForm->Pt2);
+			newSV.setPresentation(editForm->Presentation);
+			newSV.setFinal(editForm->Final);
 			newSV.tinhDiemTrungBinh();
-			if (nativeMonHoc->suaSV(currentSV.mssv, newSV)) {
+			if (nativeMonHoc->suaSV(currentSV.getMssv(), newSV)) {
 				LoadData();
 				MessageBox::Show(L"Cập nhật sinh viên thành công.", L"Thông báo", MessageBoxButtons::OK, MessageBoxIcon::Information);
 			}
@@ -728,12 +728,17 @@ namespace quanlysv {
 	private: System::Void Them_Click(System::Object^ sender, System::EventArgs^ e) {
 		// Tạo đối tượng SinhVien rỗng (hoặc giá trị mặc định)
 		SinhVien blankSV;
-		strcpy(blankSV.mssv, "");
-		wcscpy(blankSV.hoTen, L"");
-		blankSV.lab1 = blankSV.lab2 = blankSV.pt1 = blankSV.pt2 = blankSV.presentation = blankSV.final = -1.0f;
-		blankSV.trung_binh = 0;
-		blankSV.gpa = 0;
-		blankSV.diemchu = 'F';
+		blankSV.setHoTen(L"");
+		blankSV.setMssv("");
+		blankSV.setLab1(-1.0f);
+		blankSV.setLab2(-1.0f);
+		blankSV.setPt1(-1.0f);
+		blankSV.setPt2(-1.0f);
+		blankSV.setPresentation(-1.0f);
+		blankSV.setFinal(-1.0f);
+		blankSV.tinhDiemTrungBinh();
+		blankSV.tinhdiemchu();
+
 		// Mở EditForm với đối tượng rỗng
 		EditForm^ editForm = gcnew EditForm(blankSV);
 		editForm->Text = L"Thêm sinh viên mới";
@@ -749,20 +754,22 @@ namespace quanlysv {
 				MessageBox::Show(L"Mã số sinh viên đã tồn tại trong danh sách!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
 				return;
 			}
-
-			strcpy(newSV.mssv, newMssv.c_str());
-			wcscpy(newSV.hoTen, newHoTen.c_str());
-			newSV.lab1 = editForm->Lab1;
-			newSV.lab2 = editForm->Lab2;
-			newSV.pt1 = editForm->Pt1;
-			newSV.pt2 = editForm->Pt2;
-			newSV.presentation = editForm->Presentation;
-			newSV.final = editForm->Final;
+			// Gán các giá trị từ EditForm vào đối tượng SinhVien mới
+			newSV.setMssv(newMssv.c_str());
+			newSV.setHoTen(newHoTen.c_str());
+			newSV.setLab1(editForm->Lab1);
+			newSV.setLab2(editForm->Lab2);
+			newSV.setPt1(editForm->Pt1);
+			newSV.setPt2(editForm->Pt2);
+			newSV.setPresentation(editForm->Presentation);
+			newSV.setFinal(editForm->Final);
 			newSV.tinhDiemTrungBinh();
 			// Kiểm tra số lượng sinh viên có chưa đạt giới hạn MAX_STUDENT
-			if (nativeMonHoc->n < MAX_STUDENT) {
-				nativeMonHoc->sv[nativeMonHoc->n] = newSV;
-				nativeMonHoc->n++;
+			int curr = nativeMonHoc->getSoLuongSV();
+			if (curr < MAX_STUDENT) {
+				SinhVien* svList = const_cast<SinhVien*>(nativeMonHoc->getSinhVienList());
+				svList[curr] = newSV;
+				nativeMonHoc->setSoLuongSV(curr + 1);
 				nativeMonHoc->luu();
 				LoadData();
 				MessageBox::Show(L"Thêm sinh viên thành công.", L"Thông báo", MessageBoxButtons::OK, MessageBoxIcon::Information);

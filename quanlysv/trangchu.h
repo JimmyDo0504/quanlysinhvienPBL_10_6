@@ -198,9 +198,9 @@ namespace quanlysv {
 			int totalCount = 0;
 
 			// 4) Duyệt từng phản ánh
-			for (int i = 0; i < dsPA.n; i++) {
+			for (int i = 0; i < dsPA.getSoLuongPA(); i++) {
 				// Lấy tên môn native và chuyển thành String^ để so sánh
-				String^ subj_native = gcnew String(dsPA.danhsachPA[i].tenmonhoc);
+				String^ subj_native = gcnew String(dsPA.getPhanAnhList()[i].tenmonhoc);
 				if (!subjects->Contains(subj_native))
 					continue;
 
@@ -208,12 +208,12 @@ namespace quanlysv {
 				totalCount++;
 
 				// Lấy MSSV native (char[]) -> String^
-				String^ mssv = gcnew String(dsPA.danhsachPA[i].nguoi_goi.mssv);
+				String^ mssv = gcnew String(dsPA.getPhanAnhList()[i].nguoi_goi.getMssv());
 
 				// Nếu chưa có trong combobox thì thêm và đẩy vào listPA
 				if (!this->phananhbox->Items->Contains(mssv)) {
 					this->phananhbox->Items->Add(mssv);
-					this->listPA->push_back(dsPA.danhsachPA[i]);
+					this->listPA->push_back(dsPA.getPhanAnhList()[i]);
 				}
 			}
 
@@ -554,10 +554,10 @@ namespace quanlysv {
 			ds.docdanhsachgv();
 
 			// tìm giảng viên
-			for (int i = 0; i < ds.n; i++) {
-				if (magv == ds.ds[i].magv) {
+			for (int i = 0; i < ds.getn(); i++) {
+				if (magv == ds.getGiangVienList()[i].getMagv()) {
 					// chuyển wchar_t hoten -> String^
-					String^ hoten = gcnew String(ds.ds[i].hoten);
+					String^ hoten = gcnew String(ds.getGiangVienList()[i].getHoten());
 					// cập nhật label chào
 					this->DaiHocDungHocLai->Text = L"Xin chào " + hoten;
 					return;
@@ -649,7 +649,7 @@ private: System::Void docPA_Click(System::Object^ sender, System::EventArgs^ e) 
 
 	// Lấy liệu phản ánh
 	phan_anh pa = (*this->listPA)[idx];
-	String^ mssv = gcnew String(pa.nguoi_goi.mssv);
+	String^ mssv = gcnew String(pa.nguoi_goi.getMssv());
 	String^ subj = gcnew String(pa.tenmonhoc);
 	String^ content = gcnew String(pa.noi_dung);
 	String^ time = gcnew String(pa.thoi_gian);
